@@ -73,6 +73,30 @@ export function getElement(element: string | HTMLElement): HTMLElement | null {
 }
 
 /**
+ * Find and return the target DOM elements based on a step's 'target'.
+ */
+// Helper method to normalize target(s) into an array of HTMLElements
+export function getElements(target: string | HTMLElement | Array<string | HTMLElement>): HTMLElement[] {
+  if (typeof target === 'string') {
+    return Array.from(document.querySelectorAll(target));
+  } else if (target instanceof HTMLElement) {
+    return [target];
+  } else if (Array.isArray(target)) {
+    return target.flatMap(t => {
+      if (typeof t === 'string') {
+        return Array.from(document.querySelectorAll(t));
+      } else if (t instanceof HTMLElement) {
+        return [t];
+      } else {
+        return [];
+      }
+    });
+  } else {
+    return [];
+  }
+}
+
+/**
  *  Get computed style property
  */
 export function getStyleComputedProperty(el: HTMLElement): CSSStyleDeclaration | null {
