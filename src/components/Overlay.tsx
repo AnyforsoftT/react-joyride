@@ -108,8 +108,8 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
     ] as Lifecycle[];
 
     return (
-      disableOverlay ||
-      (continuous ? hiddenLifecycles.includes(lifecycle) : lifecycle !== LIFECYCLE.TOOLTIP)
+        disableOverlay ||
+        (continuous ? hiddenLifecycles.includes(lifecycle) : lifecycle !== LIFECYCLE.TOOLTIP)
     );
   };
 
@@ -131,7 +131,7 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
     } as React.CSSProperties;
   }
 
-  get spotlightStyles(): SpotlightStyles {
+  get spotlightStyles(): SpotlightStyles[] {
     const { showSpotlight } = this.state;
     const {
       disableScrollParentFix = false,
@@ -140,42 +140,59 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
       styles,
       target,
     } = this.props;
-    const element = getElement(target);
-    const elementRect = getClientRect(element);
-    const isFixedTarget = hasPosition(element);
-    const top = getElementPosition(element, spotlightPadding, disableScrollParentFix);
+    // Support multiple targets
+    const elements =
+        typeof target === 'string'
+            ? Array.from(document.querySelectorAll(target))
+            : Array.isArray(target)
+                ? target
+                : [target];
 
-    return {
-      ...(isLegacy() ? styles.spotlightLegacy : styles.spotlight),
-      height: Math.round((elementRect?.height ?? 0) + spotlightPadding * 2),
-      left: Math.round((elementRect?.left ?? 0) - spotlightPadding),
-      opacity: showSpotlight ? 1 : 0,
-      pointerEvents: spotlightClicks ? 'none' : 'auto',
-      position: isFixedTarget ? 'fixed' : 'absolute',
-      top,
-      transition: 'opacity 0.2s',
-      width: Math.round((elementRect?.width ?? 0) + spotlightPadding * 2),
-    } satisfies React.CSSProperties;
+    return elements.map(element => {
+      const elementRect = getClientRect(element);
+      const isFixedTarget = hasPosition(element);
+      const top = getElementPosition(element, spotlightPadding, disableScrollParentFix);
+
+      return {
+        ...(isLegacy() ? styles.spotlightLegacy : styles.spotlight),
+        height: Math.round((elementRect?.height ?? 0) + spotlightPadding * 2),
+        left: Math.round((elementRect?.left ?? 0) - spotlightPadding),
+        opacity: showSpotlight ? 1 : 0,
+        pointerEvents: spotlightClicks ? 'none' : 'auto',
+        position: isFixedTarget ? 'fixed' : 'absolute',
+        top,
+        transition: 'opacity 0.2s',
+        width: Math.round((elementRect?.width ?? 0) + spotlightPadding * 2),
+      } as SpotlightStyles;
+    });
   }
 
   handleMouseMove = (event: MouseEvent) => {
     const { mouseOverSpotlight } = this.state;
-    const { height, left, position, top, width } = this.spotlightStyles;
+    const spotlightsStyles = this.spotlightStyles;
 
-    const offsetY = position === 'fixed' ? event.clientY : event.pageY;
-    const offsetX = position === 'fixed' ? event.clientX : event.pageX;
-    const inSpotlightHeight = offsetY >= top && offsetY <= top + height;
-    const inSpotlightWidth = offsetX >= left && offsetX <= left + width;
-    const inSpotlight = inSpotlightWidth && inSpotlightHeight;
+    // Check if the mouse is over any spotlight
+    const isInAnySpotlight = spotlightsStyles.some(({ height, left, position, top, width }) => {
+      const offsetY = position === 'fixed' ? event.clientY : event.pageY;
+      const offsetX = position === 'fixed' ? event.clientX : event.pageX;
+      const inSpotlightHeight = offsetY >= top && offsetY <= top + height;
+      const inSpotlightWidth = offsetX >= left && offsetX <= left + width;
+      return inSpotlightWidth && inSpotlightHeight;
+    });
 
-    if (inSpotlight !== mouseOverSpotlight) {
-      this.updateState({ mouseOverSpotlight: inSpotlight });
+    if (isInAnySpotlight !== mouseOverSpotlight) {
+      this.updateState({ mouseOverSpotlight: isInAnySpotlight });
     }
   };
 
   handleScroll = () => {
     const { target } = this.props;
-    const element = getElement(target);
+    const elements =
+        typeof target === 'string'
+            ? Array.from(document.querySelectorAll(target))
+            : Array.isArray(target)
+                ? target
+                : [target];
 
     if (this.scrollParent !== document) {
       const { isScrolling } = this.state;
@@ -189,7 +206,7 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
       this.scrollTimeout = window.setTimeout(() => {
         this.updateState({ isScrolling: false, showSpotlight: true });
       }, 50);
-    } else if (hasPosition(element, 'sticky')) {
+    } else if (elements.some(element => hasPosition(element, 'sticky'))) {
       this.updateState({});
     }
   };
@@ -223,28 +240,36 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
       return null;
     }
 
-    let spotlight = placement !== 'center' && showSpotlight && (
-      <Spotlight styles={spotlightStyles} />
-    );
+    let spotlights: JSX.Element[] = [];
+
+    if (placement !== 'center' && showSpotlight) {
+      spotlights = spotlightStyles.map((styles, index) => (
+          <Spotlight key={index} styles={styles} />
+      ));
+    }
 
     // Hack for Safari bug with mix-blend-mode with z-index
     if (getBrowser() === 'safari') {
       const { mixBlendMode, zIndex, ...safariOverlay } = overlayStyles;
 
-      spotlight = <div style={{ ...safariOverlay }}>{spotlight}</div>;
+      spotlights = spotlights.map((spotlight, index) => (
+          <div key={index} style={{ ...safariOverlay }}>
+            {spotlight}
+          </div>
+      ));
       delete overlayStyles.backgroundColor;
     }
 
     return (
-      <div
-        className="react-joyride__overlay"
-        data-test-id="overlay"
-        onClick={onClickOverlay}
-        role="presentation"
-        style={overlayStyles}
-      >
-        {spotlight}
-      </div>
+        <div
+            className="react-joyride__overlay"
+            data-test-id="overlay"
+            onClick={onClickOverlay}
+            role="presentation"
+            style={overlayStyles}
+        >
+          {spotlights}
+        </div>
     );
   }
 }

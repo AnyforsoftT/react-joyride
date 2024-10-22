@@ -267,7 +267,7 @@ export type Step = Simplify<
      * The target for the step.
      * It can be a CSS selector or an HTMLElement ref.
      */
-    target: string | HTMLElement;
+    target: string | HTMLElement
     /**
      * The tooltip's title.
      */
