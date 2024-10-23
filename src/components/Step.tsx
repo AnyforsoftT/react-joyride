@@ -225,8 +225,6 @@ export default class JoyrideStep extends React.Component<StepProps> {
     const currentTarget = step.beaconTarget || step.target
     const target = getElement(currentTarget);
 
-    console.log(target, 'target');
-
     if (!validateStep(step) || !is.domElement(target)) {
       return null;
     }
