@@ -89,9 +89,9 @@
     "vitest": "^2.0.5"
   },
   "scripts": {
-    "build": " npm run clean && tsup && ts-node scripts/fix-cjs.ts",
+    "build": "npm run clean && tsup && ts-node scripts/fix-cjs.ts",
     "watch": "tsup --watch",
-    "clean": "del dist/*",
+    "clean": "del-cli dist/*",
     "lint": "eslint --fix src test",
     "typecheck": "tsc -p test/tsconfig.json",
     "typevalidation": "attw -P",
@@ -104,7 +104,7 @@
     "format": "prettier \"**/*.{js,jsx,ts,tsx}\" --write",
     "validate": "npm run lint && npm run typecheck && npm run test:coverage && npm run e2e && npm run build && npm run size && npm run typevalidation",
     "size": "size-limit",
-    "prepare": "husky",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run validate"
   },
   "tsup": {

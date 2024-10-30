@@ -1,4 +1,4 @@
-import { ElementType, MouseEventHandler, ReactNode, RefCallback } from 'react';
+import {ElementType, MouseEventHandler, JSX, ReactNode, RefCallback} from 'react';
 import { Props as FloaterProps } from 'react-floater';
 import { PartialDeep, SetRequired, Simplify } from 'type-fest';
 
@@ -77,7 +77,7 @@ export type BaseProps = {
   /**
    * A React component to use instead the default Tooltip.
    */
-  tooltipComponent?: ElementType<TooltipRenderProps>;
+  tooltipComponent?: ElementType<BeaconRenderProps> | any
 };
 
 export type BeaconProps = Simplify<
@@ -221,7 +221,7 @@ export type Step = Simplify<
     /**
      * The tooltip's body.
      */
-    content: ReactNode;
+    content: JSX.Element;
     /**
      * Additional data you can add to the step.
      */
@@ -268,6 +268,11 @@ export type Step = Simplify<
      * It can be a CSS selector or an HTMLElement ref.
      */
     target: string | HTMLElement;
+    /**
+     * The beacon target for the step.
+     * If not provided step target will be used.
+     */
+    beaconTarget?: string | HTMLElement
     /**
      * The tooltip's title.
      */

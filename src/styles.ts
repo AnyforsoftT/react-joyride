@@ -32,6 +32,15 @@ const spotlight = {
   position: 'absolute',
 };
 
+function isIPad(): boolean {
+  const ua = navigator.userAgent || '';
+  const maxTouchPoints = navigator.maxTouchPoints || 0;
+  if (ua.includes('iPad')) {
+    return true;
+  }
+  return ua.includes('Macintosh') && maxTouchPoints > 1;
+}
+
 export default function getStyles(props: Props, step: StepMerged) {
   const { floaterProps, styles } = props;
   const mergedFloaterProps = deepmerge(step.floaterProps ?? {}, floaterProps ?? {});
@@ -39,6 +48,8 @@ export default function getStyles(props: Props, step: StepMerged) {
   const options = deepmerge(defaultOptions, mergedStyles.options || {}) satisfies StylesOptions;
   const hideBeacon = step.placement === 'center' || step.disableBeacon;
   let { width } = options;
+
+  const isIpadDevice = isIPad();
 
   if (window.innerWidth > 480) {
     width = 380;
@@ -159,7 +170,7 @@ export default function getStyles(props: Props, step: StepMerged) {
     overlay: {
       ...overlay,
       backgroundColor: options.overlayColor,
-      mixBlendMode: 'hard-light',
+      mixBlendMode: isIpadDevice ? 'color-burn' : 'hard-light',
     },
     overlayLegacy: {
       ...overlay,
@@ -167,6 +178,7 @@ export default function getStyles(props: Props, step: StepMerged) {
     overlayLegacyCenter: {
       ...overlay,
       backgroundColor: options.overlayColor,
+      background: 'pink'
     },
     spotlight: {
       ...spotlight,
