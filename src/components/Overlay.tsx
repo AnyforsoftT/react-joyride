@@ -252,11 +252,14 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
     if (getBrowser() === 'safari') {
       const { mixBlendMode, zIndex, ...safariOverlay } = overlayStyles;
 
-      spotlights = spotlights.map((spotlight, index) => (
-          <div key={index} style={{ ...safariOverlay }}>
-            {spotlight}
-          </div>
-      ));
+      spotlights = spotlights.map((spotlight, index) => {
+        const isFirstItem = index === 0
+        return (
+            <div key={index} style={{...safariOverlay, backgroundColor: isFirstItem ? safariOverlay.backgroundColor : 'none'}}>
+              {spotlight}
+            </div>
+        )
+      });
       delete overlayStyles.backgroundColor;
     }
 
@@ -266,7 +269,7 @@ export default class JoyrideOverlay extends React.Component<OverlayProps, State>
             data-test-id="overlay"
             onClick={onClickOverlay}
             role="presentation"
-            style={overlayStyles}
+            style={{...overlayStyles}}
         >
           {spotlights}
         </div>
